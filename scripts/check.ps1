@@ -3,13 +3,15 @@ $gabeProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Pa
 Push-Location -LiteralPath $gabeProjectRoot
 try {
     . (Join-Path $PSScriptRoot 'env.ps1')
-    cargo fmt --all -- --check
-    if ($LASTEXITCODE -ne 0) { throw 'Rust formatting check failed.' }
-    cargo clippy --workspace --all-targets --locked -- -D warnings
-    if ($LASTEXITCODE -ne 0) { throw 'Clippy failed.' }
+    go run ./tools/checkfmt
+    if ($LASTEXITCODE -ne 0) { throw 'Go formatting check failed.' }
+    go vet ./...
+    if ($LASTEXITCODE -ne 0) { throw 'Go vet failed.' }
     $env:GABE_REQUIRE_NATIVE_TESTS = '1'
-    cargo test --workspace --locked
+    go test -count=1 ./...
     if ($LASTEXITCODE -ne 0) { throw 'Compiler or native tests failed.' }
+    go build -trimpath -o bin/ ./cmd/gabe
+    if ($LASTEXITCODE -ne 0) { throw 'Compiler build failed.' }
     Write-Host 'Formatting, lint, frontend tests, and required native tests passed.'
 } finally {
     Pop-Location

@@ -16,7 +16,7 @@
 
 ## Frontend
 
-`gabe-compiler` is a platform-independent Rust library. It owns source spans, syntax, symbol resolution, lexical scopes, primitive types, numeric coercion, return checking, and unsafe restrictions. Its public `check` API returns typed HIR; `compile` returns LLVM IR. No LLVM installation is needed for either operation.
+`compiler/` is a platform-independent Go package. It owns source spans, syntax, symbol resolution, lexical scopes, primitive types, numeric coercion, return checking, and unsafe restrictions. Its public `Check` API returns typed HIR; `Compile` returns LLVM IR. No LLVM installation is needed for either operation. AST and HIR nodes are private to the package so callers cannot construct invalid lowering input.
 
 The parser uses recursive descent for statements and precedence climbing for binary expressions. AST preserves source spans. Semantic analysis first collects all function signatures, enabling forward calls and recursion, then checks each body. Every local gets a unique ID and fixed type. Assignment targets use a separate typed lvalue representation so indirect addresses are evaluated once.
 
@@ -24,7 +24,7 @@ The current checker reports the first error. Multi-error recovery, incremental s
 
 ## LLVM backend
 
-The initial backend emits textual LLVM IR with opaque `ptr` pointers. This is real LLVM input, consumed by Clang or `llc`, rather than transpiled C. This keeps the bootstrap compiler dependency-free and decouples frontend builds from LLVM's C++ ABI and a particular library installation. See [ADR 0001](decisions/0001-bootstrap-backend.md).
+The backend emits textual LLVM IR with opaque `ptr` pointers. This is real LLVM input, consumed by Clang or `llc`, rather than transpiled C. This keeps the compiler dependency-free and decouples frontend builds from LLVM's C++ ABI and a particular library installation. [ADR 0001](decisions/0001-bootstrap-backend.md) records the bootstrap backend; [ADR 0002](decisions/0002-go-compiler.md) changes its implementation language from Rust to Go while retaining this architecture.
 
 All local slots are allocated in each function's entry block; Clang's optimization passes can promote them into SSA registers. Branches and loops have explicit basic blocks. Boolean short-circuiting produces branches and phi nodes, preserving evaluation order and side effects. Integer division guards branch to `llvm.trap` before an invalid `sdiv` / `srem` can introduce LLVM undefined behavior.
 
@@ -32,7 +32,7 @@ Generated functions use reserved `gb_<id>` names. A C `main` wrapper calls Gabe'
 
 ## Driver and linking
 
-`gabe-cli` handles filesystem I/O, options, process execution, and tool discovery. It passes compiler output through temporary files, cleans those files on return, and propagates tool failures and program exit status. It rejects outputs that would overwrite the source.
+`cmd/gabe/` provides the executable entry point. `internal/cli/` handles filesystem I/O, options, process execution, and tool discovery. It passes compiler output through temporary files, cleans those files on return, and propagates tool failures and program exit status. It rejects outputs that would overwrite the source, including aliases of the same file.
 
 Clang is the primary backend and runs optimization, object generation, and platform linking. The alternative `llc` path supports object generation and Windows/MSVC linking. On Windows this path discovers Visual Studio using `vswhere` and the Windows SDK library directories. It links the static C runtime. Other executable formats use Clang's native linker integration.
 
@@ -45,5 +45,7 @@ An LLVM target triple selects code generation. SDK/sysroot, C runtime, system li
 ## Runtime and performance direction
 
 There is no managed runtime, JIT, garbage collector, or interpreter. Console output currently calls platform `printf`, and externs call primitive C ABI functions. The initial memory surface consists of stack locals and unsafe pointers. Heap allocation, ownership, aggregates, bounds checks, and standard library design still require explicit decisions.
+
+The compiler executable uses Go's runtime and garbage collector. These are development-tool dependencies only: emitting LLVM IR and linking the platform C runtime does not embed the Go runtime in compiled Gabe programs. The compiler uses no cgo, Go `unsafe`, or third-party packages.
 
 Future performance work should examine optimized IR/assembly and measure representative workloads. Debug metadata, library compilation, monomorphization, ABI-safe aggregates, LTO, and reproducible benchmark tooling are planned. LLVM integration alone does not establish performance parity.

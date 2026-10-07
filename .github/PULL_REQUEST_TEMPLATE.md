@@ -4,7 +4,7 @@ Describe the concrete program or behavior this changes and the resulting behavio
 
 ## Validation
 
-- Formatting and Clippy:
+- Go formatting and `go vet`:
 - Frontend acceptance/rejection tests:
 - Required native tests (`GABE_REQUIRE_NATIVE_TESTS=1`):
 - Targets actually linked/executed:
