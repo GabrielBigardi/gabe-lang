@@ -1,6 +1,6 @@
 # ADR 0001: Rust frontend and textual LLVM IR
 
-Status: accepted for the v0.1 bootstrap.
+Status: accepted for the v0.1 bootstrap. The Rust implementation choice is superseded by [ADR 0002](0002-go-compiler.md); the textual LLVM backend decision remains in effect.
 
 ## Context
 

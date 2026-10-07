@@ -1,6 +1,6 @@
 # Targets and toolchains
 
-Gabe emits LLVM IR. LLVM performs machine-code generation; the platform toolchain links the resulting objects. Rust is needed to build the Gabe compiler itself, but `rustup target add` does not install a Gabe output target or its SDK.
+Gabe emits LLVM IR. LLVM performs machine-code generation; the platform toolchain links the resulting objects. Go builds the Gabe compiler itself. Go's `GOOS` and `GOARCH` select a host for that compiler executable; Gabe's `--target` selects the output program's LLVM target. Neither mechanism installs the output target's SDK or runtime libraries.
 
 ## Three distinct outputs
 
@@ -16,7 +16,7 @@ Gabe emits LLVM IR. LLVM performs machine-code generation; the platform toolchai
 
 Windows/MSVC, Linux/GNU, and macOS/Darwin aliases exist for x64 and ARM64. This bootstrap was validated on Windows/x64 with LLVM 18.1.6 and MSVC: native examples and end-to-end tests executed, and COFF/ELF/Mach-O objects were generated for all six primary target combinations. Executables on Linux, macOS, or Windows ARM64 were not run in this initial local environment.
 
-CI is configured for native execution on Windows, Linux, and macOS, each on x64 and ARM64, plus cross-object generation. Treat CI configuration separately from a completed remote run: inspect actual results after publishing the repository.
+CI runs the Go compiler and generated native programs on Windows, Linux, and macOS, each on x64 and ARM64, plus cross-object generation. Inspect the [actual CI results](https://github.com/GabrielBigardi/gabe-lang/actions/workflows/ci.yml) when assessing a particular revision.
 
 ## Clang
 

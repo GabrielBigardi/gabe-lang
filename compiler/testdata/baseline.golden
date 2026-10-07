@@ -1,0 +1,299 @@
+; Gabe LLVM IR (opaque pointers; LLVM 17+)
+target triple = "aarch64-unknown-linux-gnu"
+
+@gb_string_0 = private unnamed_addr constant [3 x i8] c"\25\73\00"
+@gb_string_1 = private unnamed_addr constant [1 x i8] c"\00"
+@gb_string_2 = private unnamed_addr constant [4 x i8] c"\25\73\0A\00"
+@gb_string_3 = private unnamed_addr constant [7 x i8] c"\25\2E\31\37\67\0A\00"
+@gb_string_4 = private unnamed_addr constant [6 x i8] c"\25\6C\6C\64\0A\00"
+@gb_string_5 = private unnamed_addr constant [5 x i8] c"\54\72\75\65\00"
+@gb_string_6 = private unnamed_addr constant [6 x i8] c"\46\61\6C\73\65\00"
+@gb_string_7 = private unnamed_addr constant [20 x i8] c"\4F\6C\C3\A1\20\F0\9F\8C\8D\20\25\73\20\25\6E\0A\09\22\5C\00"
+
+declare i32 @printf(ptr, ...)
+declare void @llvm.trap() cold noreturn nounwind
+
+declare i32 @abs(i32)
+
+; Address
+define ptr @gb_1(ptr %arg0, ptr %arg1) {
+entry:
+  %v0 = alloca ptr
+  %v1 = alloca ptr
+  store ptr %arg0, ptr %v0
+  store ptr %arg1, ptr %v1
+  %r0 = load ptr, ptr %v1
+  %r1 = load i32, ptr %r0
+  %r2 = add i32 %r1, 1
+  store i32 %r2, ptr %r0
+  %r3 = load ptr, ptr %v0
+  ret ptr %r3
+}
+
+; Program.Factorial
+define i64 @gb_2(i32 %arg0) {
+entry:
+  %v0 = alloca i32
+  store i32 %arg0, ptr %v0
+  %r0 = load i32, ptr %v0
+  %r1 = icmp sle i32 %r0, 1
+  br i1 %r1, label %block_0, label %block_1
+block_0:
+  %r2 = sext i32 1 to i64
+  ret i64 %r2
+block_1:
+  %r3 = load i32, ptr %v0
+  %r4 = sext i32 %r3 to i64
+  %r5 = load i32, ptr %v0
+  %r6 = sub i32 %r5, 1
+  %r7 = call i64 @gb_2(i32 %r6)
+  %r8 = mul i64 %r4, %r7
+  ret i64 %r8
+}
+
+; Program.Print
+define void @gb_3(ptr %arg0) {
+entry:
+  %v0 = alloca ptr
+  store ptr %arg0, ptr %v0
+  %r0 = load ptr, ptr %v0
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([3 x i8], ptr @gb_string_0, i64 0, i64 0), ptr %r0)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([4 x i8], ptr @gb_string_2, i64 0, i64 0), ptr getelementptr inbounds ([1 x i8], ptr @gb_string_1, i64 0, i64 0))
+  ret void
+}
+
+; Program.Main
+define i32 @gb_4() {
+entry:
+  %v0 = alloca i32
+  %v1 = alloca i64
+  %v2 = alloca double
+  %v3 = alloca i32
+  %v4 = alloca ptr
+  %v5 = alloca ptr
+  %v6 = alloca i1
+  %v7 = alloca i1
+  %v8 = alloca i32
+  %v9 = alloca i32
+  %v10 = alloca i1
+  %v11 = alloca i1
+  %v12 = alloca i1
+  %v13 = alloca i1
+  %v14 = alloca i1
+  %v15 = alloca i1
+  store i32 -2147483648, ptr %v0
+  %r0 = load i32, ptr %v0
+  %r1 = sext i32 %r0 to i64
+  store i64 %r1, ptr %v1
+  %r2 = load i64, ptr %v1
+  %r3 = sitofp i64 %r2 to double
+  store double %r3, ptr %v2
+  %r4 = load double, ptr %v2
+  %r5 = fneg double %r4
+  store double %r5, ptr %v2
+  %r6 = load double, ptr %v2
+  store double %r6, ptr %v2
+  %r7 = load double, ptr %v2
+  %r8 = fadd double %r7, 0x3FF0000000000000
+  store double %r8, ptr %v2
+  %r9 = load double, ptr %v2
+  %r10 = fadd double %r9, 0xBFF0000000000000
+  store double %r10, ptr %v2
+  %r11 = load double, ptr %v2
+  %r12 = fmul double %r11, 0x4000000000000000
+  store double %r12, ptr %v2
+  %r13 = load double, ptr %v2
+  %r14 = sitofp i32 2 to double
+  %r15 = fdiv double %r13, %r14
+  store double %r15, ptr %v2
+  %r16 = load double, ptr %v2
+  %r17 = frem double %r16, 0x4014000000000000
+  store double %r17, ptr %v2
+  %r18 = load double, ptr %v2
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([7 x i8], ptr @gb_string_3, i64 0, i64 0), double %r18)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([6 x i8], ptr @gb_string_4, i64 0, i64 0), i64 -9223372036854775808)
+  store i32 0, ptr %v3
+  store i32 5, ptr %v0
+  store ptr %v0, ptr %v4
+  store ptr %v4, ptr %v5
+  %r19 = call ptr @gb_1(ptr %v0, ptr %v3)
+  %r20 = load i32, ptr %r19
+  %r21 = call i32 @abs(i32 -3)
+  %r22 = add i32 %r20, %r21
+  store i32 %r22, ptr %r19
+  %r23 = load ptr, ptr %v5
+  %r24 = load ptr, ptr %r23
+  %r25 = load i32, ptr %v0
+  store i32 %r25, ptr %r24
+  %r26 = load ptr, ptr %v4
+  %r27 = icmp eq ptr %r26, %v0
+  %r28 = select i1 %r27, ptr getelementptr inbounds ([5 x i8], ptr @gb_string_5, i64 0, i64 0), ptr getelementptr inbounds ([6 x i8], ptr @gb_string_6, i64 0, i64 0)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([4 x i8], ptr @gb_string_2, i64 0, i64 0), ptr %r28)
+  %r29 = load ptr, ptr %v4
+  %r30 = icmp ne ptr %r29, %v0
+  %r31 = select i1 %r30, ptr getelementptr inbounds ([5 x i8], ptr @gb_string_5, i64 0, i64 0), ptr getelementptr inbounds ([6 x i8], ptr @gb_string_6, i64 0, i64 0)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([4 x i8], ptr @gb_string_2, i64 0, i64 0), ptr %r31)
+  br i1 true, label %block_0, label %block_1
+block_0:
+  %r32 = icmp eq i32 2, 0
+  %r33 = icmp eq i32 8, -2147483648
+  %r34 = icmp eq i32 2, -1
+  %r35 = and i1 %r33, %r34
+  %r36 = or i1 %r32, %r35
+  br i1 %r36, label %block_2, label %block_3
+block_2:
+  call void @llvm.trap()
+  unreachable
+block_3:
+  %r37 = sdiv i32 8, 2
+  %r38 = icmp eq i32 %r37, 4
+  br i1 %r38, label %block_5, label %block_4
+block_4:
+  %r39 = load i32, ptr %v3
+  %r40 = add i32 %r39, 1
+  store i32 %r40, ptr %v3
+  %r41 = icmp eq i32 %r40, 100
+  br label %block_5
+block_5:
+  %r42 = phi i1 [ true, %block_3 ], [ %r41, %block_4 ]
+  br label %block_1
+block_1:
+  %r43 = phi i1 [ false, %entry ], [ %r42, %block_5 ]
+  store i1 %r43, ptr %v6
+  br i1 false, label %block_7, label %block_6
+block_6:
+  %r44 = load i1, ptr %v6
+  br i1 %r44, label %block_8, label %block_9
+block_8:
+  %r45 = load i32, ptr %v3
+  %r46 = icmp slt i32 %r45, 1
+  %r47 = xor i1 %r46, true
+  br label %block_9
+block_9:
+  %r48 = phi i1 [ false, %block_6 ], [ %r47, %block_8 ]
+  br label %block_7
+block_7:
+  %r49 = phi i1 [ true, %block_1 ], [ %r48, %block_9 ]
+  store i1 %r49, ptr %v7
+  %r50 = load i1, ptr %v6
+  %r51 = load i1, ptr %v7
+  %r52 = icmp eq i1 %r50, %r51
+  %r53 = select i1 %r52, ptr getelementptr inbounds ([5 x i8], ptr @gb_string_5, i64 0, i64 0), ptr getelementptr inbounds ([6 x i8], ptr @gb_string_6, i64 0, i64 0)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([4 x i8], ptr @gb_string_2, i64 0, i64 0), ptr %r53)
+  %r54 = load i1, ptr %v6
+  %r55 = load i1, ptr %v7
+  %r56 = icmp ne i1 %r54, %r55
+  %r57 = select i1 %r56, ptr getelementptr inbounds ([5 x i8], ptr @gb_string_5, i64 0, i64 0), ptr getelementptr inbounds ([6 x i8], ptr @gb_string_6, i64 0, i64 0)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([4 x i8], ptr @gb_string_2, i64 0, i64 0), ptr %r57)
+  store i32 0, ptr %v8
+  br label %block_10
+block_10:
+  %r58 = load i32, ptr %v8
+  %r59 = icmp slt i32 %r58, 4
+  br i1 %r59, label %block_11, label %block_13
+block_11:
+  %r60 = load i32, ptr %v8
+  %r61 = icmp eq i32 %r60, 1
+  br i1 %r61, label %block_14, label %block_16
+block_14:
+  br label %block_12
+block_16:
+  %r62 = load i32, ptr %v8
+  %r63 = icmp sge i32 %r62, 3
+  br i1 %r63, label %block_17, label %block_19
+block_17:
+  br label %block_13
+block_19:
+  %r64 = load i32, ptr %v0
+  %r65 = load i32, ptr %v8
+  %r66 = add i32 %r64, %r65
+  store i32 %r66, ptr %v0
+  br label %block_12
+block_12:
+  %r67 = load i32, ptr %v8
+  %r68 = add i32 %r67, 1
+  store i32 %r68, ptr %v8
+  br label %block_10
+block_13:
+  br label %block_20
+block_20:
+  %r69 = load i32, ptr %v0
+  %r70 = icmp sgt i32 %r69, 8
+  br i1 %r70, label %block_21, label %block_22
+block_21:
+  %r71 = load i32, ptr %v0
+  %r72 = add i32 %r71, -1
+  store i32 %r72, ptr %v0
+  br label %block_20
+block_22:
+  br label %block_23
+block_23:
+  br label %block_24
+block_24:
+  br label %block_26
+block_25:
+  br label %block_23
+block_26:
+  %r73 = load i32, ptr %v0
+  %r74 = add i32 %r73, 1
+  store i32 %r74, ptr %v0
+  store i32 %r73, ptr %v9
+  %r75 = load i32, ptr %v0
+  %r76 = add i32 %r75, 1
+  store i32 %r76, ptr %v0
+  store i32 %r76, ptr %v9
+  %r77 = load i32, ptr %v0
+  %r78 = sub i32 %r77, 1
+  store i32 %r78, ptr %v0
+  %r79 = load i32, ptr %v0
+  %r80 = mul i32 %r79, 2
+  store i32 %r80, ptr %v0
+  %r81 = load i32, ptr %v0
+  %r82 = icmp eq i32 2, 0
+  %r83 = icmp eq i32 %r81, -2147483648
+  %r84 = icmp eq i32 2, -1
+  %r85 = and i1 %r83, %r84
+  %r86 = or i1 %r82, %r85
+  br i1 %r86, label %block_27, label %block_28
+block_27:
+  call void @llvm.trap()
+  unreachable
+block_28:
+  %r87 = sdiv i32 %r81, 2
+  store i32 %r87, ptr %v0
+  %r88 = load i32, ptr %v0
+  %r89 = icmp eq i32 11, 0
+  %r90 = icmp eq i32 %r88, -2147483648
+  %r91 = icmp eq i32 11, -1
+  %r92 = and i1 %r90, %r91
+  %r93 = or i1 %r89, %r92
+  br i1 %r93, label %block_29, label %block_30
+block_29:
+  call void @llvm.trap()
+  unreachable
+block_30:
+  %r94 = srem i32 %r88, 11
+  store i32 %r94, ptr %v0
+  %r95 = fcmp ole double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r95, ptr %v10
+  %r96 = fcmp oge double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r96, ptr %v11
+  %r97 = fcmp ogt double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r97, ptr %v12
+  %r98 = fcmp olt double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r98, ptr %v13
+  %r99 = fcmp oeq double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r99, ptr %v14
+  %r100 = fcmp une double 0x3FF0000000000000, 0x4000000000000000
+  store i1 %r100, ptr %v15
+  call void @gb_3(ptr getelementptr inbounds ([20 x i8], ptr @gb_string_7, i64 0, i64 0))
+  %r101 = call i64 @gb_2(i32 6)
+  call i32 (ptr, ...) @printf(ptr getelementptr inbounds ([6 x i8], ptr @gb_string_4, i64 0, i64 0), i64 %r101)
+  ret i32 0
+}
+
+define i32 @main() {
+entry:
+  %result = call i32 @gb_4()
+  ret i32 %result
+}

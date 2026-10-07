@@ -19,7 +19,7 @@ class Program
 
 ## Get started
 
-Install [Rust stable](https://www.rust-lang.org/tools/install), [LLVM/Clang 17 or newer](https://releases.llvm.org/), and a native linker/SDK:
+Install [Go 1.25 or newer](https://go.dev/dl/), [LLVM/Clang 17 or newer](https://releases.llvm.org/), and a native linker/SDK:
 
 - Windows: Visual Studio or Build Tools with **Desktop development with C++** and a Windows SDK.
 - macOS: Xcode Command Line Tools (`xcode-select --install`); Apple Clang is supported for the emitted IR subset.
@@ -28,27 +28,27 @@ Install [Rust stable](https://www.rust-lang.org/tools/install), [LLVM/Clang 17 o
 From the repository root:
 
 ```sh
-cargo build --release --locked
-cargo run -- check examples/hello.gb
-cargo run -- run examples/hello.gb
-cargo run -- run examples/fibonacci.gb --release
-cargo run -- run examples/pointers.gb
+go build -trimpath -o bin/ ./cmd/gabe
+go run ./cmd/gabe check examples/hello.gb
+go run ./cmd/gabe run examples/hello.gb
+go run ./cmd/gabe run examples/fibonacci.gb --release
+go run ./cmd/gabe run examples/pointers.gb
 ```
 
-The compiled CLI is `target/release/gabe` (`gabe.exe` on Windows). To install it in your Cargo binary directory, run `cargo install --path crates/gabe-cli --locked`.
+The compiled CLI is `bin/gabe` (`bin/gabe.exe` on Windows). To install it in your Go binary directory, run `go install ./cmd/gabe`. The compiler uses only the Go standard library and needs no cgo or LLVM bindings. Generated Gabe programs are native LLVM output and do not include the Go runtime or garbage collector.
 
 On Windows, this environment helper discovers Clang or an existing `llc` bundled with the .NET Android SDK:
 
 ```powershell
 . .\scripts\env.ps1
-cargo run -- run examples/hello.gb
+go run ./cmd/gabe run examples/hello.gb
 ```
 
 Use `GABE_CLANG` / `--clang` to select a Clang executable, or `GABE_LLC` / `--llc` to select LLVM's object generator. The `llc` backend can also link Windows/MSVC executables; executable linking on Linux and macOS uses Clang. `llc -O3` applies code-generation optimization only. Clang `-O3` also runs LLVM's IR optimization pipeline and is the primary backend for performance work.
 
 ## What works in v0.1
 
-- A lexer, parser, type checker, typed HIR, and LLVM IR generator written in Rust with no third-party dependencies.
+- A lexer, parser, type checker, typed HIR, and LLVM IR generator written in Go with no third-party dependencies.
 - `int`, `long`, `double`, `bool`, `string`, `void`, typed pointers, numeric widening, and `var` inference.
 - Functions, recursion, static methods grouped in classes, and `int Main()` / `void Main()` entry points.
 - Scoped mutable variables, assignment, arithmetic, comparisons, short-circuit booleans, and prefix/postfix increment.
@@ -62,10 +62,10 @@ This is a C#-style subset. Classes currently group static functions. Objects, in
 ## Targets and cross-compilation
 
 ```sh
-cargo run -- targets
-cargo run -- build examples/hello.gb --emit llvm -o build/hello.ll
-cargo run -- build examples/hello.gb --emit obj --target linux-arm64 -o build/hello-arm64.o
-cargo run -- build examples/hello.gb --target linux-arm64 --sysroot /path/to/sdk --link-arg "-fuse-ld=lld"
+go run ./cmd/gabe targets
+go run ./cmd/gabe build examples/hello.gb --emit llvm -o build/hello.ll
+go run ./cmd/gabe build examples/hello.gb --emit obj --target linux-arm64 -o build/hello-arm64.o
+go run ./cmd/gabe build examples/hello.gb --target linux-arm64 --sysroot /path/to/sdk --link-arg "-fuse-ld=lld"
 ```
 
 | Alias | LLVM target triple |
@@ -84,9 +84,10 @@ x64 is AMD64/x86-64; ARM64 is AArch64. Other valid LLVM triples are accepted whe
 ## Project layout
 
 ```text
-crates/
-  gabe-compiler/   frontend, type analysis, LLVM generation, frontend tests
-  gabe-cli/        command-line driver, toolchain integration, native tests
+cmd/gabe/         compiler executable entry point
+compiler/         frontend, typed HIR, LLVM generation, frontend tests
+internal/cli/     command-line driver, toolchain integration, native tests
+tools/checkfmt/   portable Go formatting check
 examples/         runnable .gb programs
 docs/             language, architecture, targets, decisions, roadmap
 scripts/          environment discovery, validation, private GitHub publishing
@@ -94,18 +95,10 @@ scripts/          environment discovery, validation, private GitHub publishing
 AGENTS.md         instructions for future AI agents and contributors
 ```
 
-Validate changes with `scripts/check.ps1` (PowerShell) or `scripts/check.sh` (POSIX). Native tests exercise observable behavior at `-O0` and `-O3`, and inspect emitted COFF, ELF, and Mach-O objects. GitHub CI runs native tests on Windows, Linux, and macOS.
+Validate changes with `scripts/check.ps1` (PowerShell) or `scripts/check.sh` (POSIX). They check Go formatting, run `go vet`, require native tests, and build the compiler. Native tests exercise observable behavior at `-O0` and `-O3`, and inspect emitted COFF, ELF, and Mach-O objects. GitHub CI runs on Windows, Linux, and macOS, each on x64 and ARM64. A golden fixture preserves the original Rust compiler's LLVM output; see [ADR 0002](docs/decisions/0002-go-compiler.md) for the migration.
 
 ## Repository and contribution
 
-The intended GitHub repository is **private**, named **gabe-lang**, on the owner's account. To finish initial setup in a terminal with Git write access:
-
-```powershell
-# Install GitHub CLI from https://cli.github.com if gh is unavailable.
-gh auth login
-.\scripts\initialize-repo.ps1 -Publish
-```
-
-The setup script creates the initial commit if one does not exist, then invokes `scripts/publish-github.ps1` to create the private remote and push the Git history. Use the setup script without `-Publish` to finish only the initial local commit. Publishing refuses to overwrite an existing origin.
+The GitHub repository is [GabrielBigardi/gabe-lang](https://github.com/GabrielBigardi/gabe-lang) and is **private**. [Compiler CI](https://github.com/GabrielBigardi/gabe-lang/actions/workflows/ci.yml) validates pushes to `main` and pull requests. The initialization and private publishing scripts remain available for setting up a new copy; they are not needed for normal development in this repository.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), and [the roadmap](docs/roadmap.md). A distribution license has not been selected.
