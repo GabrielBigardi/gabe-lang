@@ -32,6 +32,8 @@ Clang can generate objects for several targets from one installation. A cross-li
 
 The Linux executable driver also links `libm` for floating-point runtime helpers. Supply it in a Linux target sysroot; additional OS targets can use `--link-arg "-lm"` when their platform requires a separate math library.
 
+For Windows/MSVC executables, the driver links `legacy_stdio_definitions.lib` to resolve direct `printf` calls from generated LLVM IR. The target's MSVC libraries must include this library, including when targeting ARM64.
+
 ## LLVM llc and Windows fallback
 
 ```powershell

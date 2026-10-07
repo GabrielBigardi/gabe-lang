@@ -38,6 +38,8 @@ Clang is the primary backend and runs optimization, object generation, and platf
 
 Linux executable links include `libm` for helpers such as floating remainder (`fmod`). Target sysroots must provide both the C runtime and the math library.
 
+Windows/MSVC executable links include `legacy_stdio_definitions.lib` on both backend paths. It provides the out-of-line `printf` symbol used by generated LLVM IR, which does not pass through the CRT headers' inline definitions.
+
 An LLVM target triple selects code generation. SDK/sysroot, C runtime, system libraries, and compatible linker are separate inputs. The compiler does not redistribute SDKs or promise universal cross-linking from a bare installation.
 
 ## Runtime and performance direction

@@ -160,6 +160,10 @@ fn driver() -> Result<u8, String> {
                 if options.triple.contains("linux") {
                     clang.arg("-lm");
                 }
+                // Direct LLVM calls bypass the CRT headers' inline printf definition.
+                if options.triple.contains("windows-msvc") {
+                    clang.arg("-llegacy_stdio_definitions");
+                }
             }
             toolchain::execute(
                 &mut clang,
