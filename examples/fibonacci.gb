@@ -1,0 +1,23 @@
+static class Program
+{
+    static long Fibonacci(int count)
+    {
+        long previous = 0;
+        long current = 1;
+
+        for (int index = 0; index < count; index++)
+        {
+            long next = previous + current;
+            previous = current;
+            current = next;
+        }
+
+        return previous;
+    }
+
+    static int Main()
+    {
+        Console.WriteLine(Fibonacci(40));
+        return 0;
+    }
+}

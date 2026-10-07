@@ -1,0 +1,16 @@
+/target/
+/build/
+/.tools/
+/.local/
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.ll
+*.bc
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example

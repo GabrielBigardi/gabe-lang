@@ -1,0 +1,66 @@
+name: Compiler CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compiler-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compiler:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Windows x64
+            runner: windows-2025
+            rust_host: x86_64-pc-windows-msvc
+          - platform: Windows ARM64
+            runner: windows-11-arm
+            rust_host: aarch64-pc-windows-msvc
+          - platform: Linux x64
+            runner: ubuntu-24.04
+            rust_host: x86_64-unknown-linux-gnu
+          - platform: Linux ARM64
+            runner: ubuntu-24.04-arm
+            rust_host: aarch64-unknown-linux-gnu
+          - platform: macOS x64
+            runner: macos-15-intel
+            rust_host: x86_64-apple-darwin
+          - platform: macOS ARM64
+            runner: macos-15
+            rust_host: aarch64-apple-darwin
+    env:
+      CARGO_TERM_COLOR: always
+      GABE_REQUIRE_NATIVE_TESTS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install native Rust toolchain
+        run: |
+          rustup set default-host ${{ matrix.rust_host }}
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+      - name: Show compiler and LLVM versions
+        run: |
+          rustc --version
+          cargo --version
+          clang --version
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Check lints
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Run frontend and required native tests
+        run: cargo test --workspace --locked
+      - name: Build release compiler
+        run: cargo build --workspace --release --locked

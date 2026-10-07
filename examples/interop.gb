@@ -1,0 +1,11 @@
+// C's abs(int) is provided by the platform C runtime.
+extern int abs(int value);
+
+int Main()
+{
+    unsafe
+    {
+        Console.WriteLine(abs(-42));
+    }
+    return 0;
+}

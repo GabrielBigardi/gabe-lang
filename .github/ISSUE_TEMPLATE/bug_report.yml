@@ -1,0 +1,25 @@
+name: Compiler bug
+description: Report rejected valid code, incorrect generated behavior, or a compiler crash.
+title: '[Bug] '
+body:
+  - type: textarea
+    id: source
+    attributes:
+      label: Minimal .gb program
+      description: Include the smallest complete program that reproduces the issue.
+      render: csharp
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Command, expected behavior, and actual output
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS/CPU, Gabe commit/version, LLVM version/backend, target triple, and optimization flags.
+    validations:
+      required: true

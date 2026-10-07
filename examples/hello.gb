@@ -1,0 +1,10 @@
+using System;
+
+class Program
+{
+    public static int Main()
+    {
+        Console.WriteLine("Hello from Gabe!");
+        return 0;
+    }
+}
