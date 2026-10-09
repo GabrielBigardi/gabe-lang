@@ -35,6 +35,9 @@ Options:
   --link-arg <argument>    Extra linker argument; repeat as needed
   -h, --help               Show this help
   -V, --version            Show version
+
+Deferred calls:
+  defer Call();            Capture arguments now; call when the current scope exits
 `
 
 type emitKind string

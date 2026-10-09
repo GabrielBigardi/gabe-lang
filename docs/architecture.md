@@ -30,6 +30,8 @@ All local slots are allocated in each function's entry block; Clang's optimizati
 
 Generated functions use reserved `gb_<id>` names. A C `main` wrapper calls Gabe's entry point. Primitive C externs keep their native symbol names. String constants are UTF-8 byte arrays with a trailing zero, interned deterministically; output always uses compiler-owned printf format strings.
 
+Deferred calls use typed, hidden argument slots allocated in the entry block. Registration evaluates and stores arguments once, from left to right. The emitter tracks a cleanup list for each lexical block, including implicit scopes around single-statement branch and loop bodies, and emits direct calls in reverse order at each exit. Loop exits retain the surrounding scope's cleanup list; returns first compute their value and then clean up all active scopes. This requires no heap allocation or dynamic defer runtime. Programs without defers retain the existing golden LLVM output. [ADR 0003](decisions/0003-scope-defer.md) defines the semantics and tradeoffs.
+
 ## Driver and linking
 
 `cmd/gabe/` provides the executable entry point. `internal/cli/` handles filesystem I/O, options, process execution, and tool discovery. It passes compiler output through temporary files, cleans those files on return, and propagates tool failures and program exit status. It rejects outputs that would overwrite the source, including aliases of the same file.

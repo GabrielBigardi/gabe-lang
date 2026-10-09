@@ -106,6 +106,34 @@ while (remaining > 0)
 
 A non-void function must return a value on all analyzed paths. Analysis is conservative about loops: a return after a loop may be required even for an obviously infinite loop. A void function may fall through. Expression statements must be calls, assignments, or updates.
 
+## Deferred calls
+
+```csharp
+defer DoSomething();
+
+{
+    int value = 1;
+    defer Console.WriteLine(value);
+    defer Console.WriteLine("second cleanup");
+    value = 2;
+    Console.WriteLine("body");
+}
+// Prints body, then second cleanup, then 1.
+// DoSomething runs when the surrounding scope exits.
+```
+
+`defer` is a reserved keyword. A deferred statement requires a function call and a trailing semicolon. Defined functions, static methods, extern calls, and console output are supported; any returned value is discarded. Argument expressions and their implicit conversions run immediately, once, from left to right. Their values are saved, and the call runs later. Only reached `defer` statements register a call.
+
+Calls run in reverse registration order when the **current lexical scope exits**. A nested `{ ... }` block runs its own defers before execution continues in the surrounding block. An `unsafe { ... }` block also has its own scope. A conditional or loop body without braces has an implicit scope, so its defers run when that body finishes. Each loop iteration cleans up independently.
+
+Normal fallthrough, `return`, `break`, and `continue` run cleanup for every scope they leave, from innermost to outermost. `break` and `continue` preserve defers in scopes surrounding the loop. Cleanup precedes the next `for` step or loop condition. A return expression is evaluated before cleanup, so a deferred mutation cannot change an already computed return value.
+
+Like Go, Gabe captures arguments at registration and calls defers in reverse order. Unlike Go's function-exit rule, Gabe runs them at block/scope exit. There are no deferred blocks, closures, or catchable exceptions. Integer traps, fatal faults, and process termination do not unwind defers.
+
+Ordinary type and unsafe checks still apply at the `defer` statement. Saving a pointer copies its address, not its pointee; changes to the pointee remain visible to the deferred call. `defer` does not extend a pointee's lifetime or add borrow checking. Unsafe code must keep captured addresses valid until the call finishes.
+
+See [examples/defer.gb](../examples/defer.gb) for a runnable program and [ADR 0003](decisions/0003-scope-defer.md) for the lowering design.
+
 ## Console output
 
 `Console.Write(value)` and `Console.WriteLine(value)` accept one `int`, `long`, `double`, `bool`, or `string`. `Console.WriteLine()` writes just a newline. `System.Console` is also supported. Output calls return `void`.

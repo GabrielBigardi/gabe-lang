@@ -33,6 +33,7 @@ go run ./cmd/gabe check examples/hello.gb
 go run ./cmd/gabe run examples/hello.gb
 go run ./cmd/gabe run examples/fibonacci.gb --release
 go run ./cmd/gabe run examples/pointers.gb
+go run ./cmd/gabe run examples/defer.gb
 ```
 
 The compiled CLI is `bin/gabe` (`bin/gabe.exe` on Windows). To install it in your Go binary directory, run `go install ./cmd/gabe`. The compiler uses only the Go standard library and needs no cgo or LLVM bindings. Generated Gabe programs are native LLVM output and do not include the Go runtime or garbage collector.
@@ -53,6 +54,7 @@ Use `GABE_CLANG` / `--clang` to select a Clang executable, or `GABE_LLC` / `--ll
 - Functions, recursion, static methods grouped in classes, and `int Main()` / `void Main()` entry points.
 - Scoped mutable variables, assignment, arithmetic, comparisons, short-circuit booleans, and prefix/postfix increment.
 - `if` / `else`, `while`, `for`, `break`, `continue`, and `return`.
+- `defer Call();` with captured arguments and reverse-order cleanup when the current scope exits.
 - `Console.Write` / `Console.WriteLine` for primitive values and UTF-8 string literals.
 - Unsafe stack addresses, pointer dereferencing, and primitive C ABI calls.
 - Source diagnostics, native executables, object files, LLVM IR, optimization options, and target triples.

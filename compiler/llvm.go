@@ -16,7 +16,10 @@ type llvmValue struct {
 	ty      valueType
 	operand string
 }
-type loopTargets struct{ end, step string }
+type loopTargets struct {
+	end, step    string
+	cleanupDepth int
+}
 type functionEmitter struct {
 	module          *llvmModule
 	function        *function
@@ -25,6 +28,7 @@ type functionEmitter struct {
 	currentBlock    string
 	terminated      bool
 	loops           []loopTargets
+	cleanups        [][]*expr
 }
 
 func emitLLVM(program *Program, triple string) string {
@@ -127,19 +131,28 @@ func (f *functionEmitter) statement(s *stmt) {
 	}
 	switch s.kind {
 	case stmtBlock:
+		f.cleanups = append(f.cleanups, nil)
 		for _, child := range s.statements {
 			f.statement(child)
 		}
+		if !f.terminated {
+			f.emitCleanups(len(f.cleanups) - 1)
+		}
+		f.cleanups = f.cleanups[:len(f.cleanups)-1]
 	case stmtLet:
 		value := f.expression(s.value)
 		f.instruction(fmt.Sprintf("store %s %s, ptr %%v%d", value.ty.llvm(), value.operand, s.variable))
 	case stmtExpr:
 		f.expression(s.value)
+	case stmtDefer:
+		f.captureDefer(s)
 	case stmtReturn:
 		if s.value != nil {
 			value := f.expression(s.value)
+			f.emitCleanups(0)
 			f.instruction(fmt.Sprintf("ret %s %s", value.ty.llvm(), value.operand))
 		} else {
+			f.emitCleanups(0)
 			f.instruction("ret void")
 		}
 		f.terminated = true
@@ -174,7 +187,7 @@ func (f *functionEmitter) statement(s *stmt) {
 		condition := f.expression(s.condition)
 		f.conditional(condition.operand, run, end)
 		f.label(run)
-		f.loops = append(f.loops, loopTargets{end, test})
+		f.loops = append(f.loops, loopTargets{end: end, step: test, cleanupDepth: len(f.cleanups)})
 		f.statement(s.body)
 		f.loops = f.loops[:len(f.loops)-1]
 		f.branch(test)
@@ -193,7 +206,7 @@ func (f *functionEmitter) statement(s *stmt) {
 			f.branch(run)
 		}
 		f.label(run)
-		f.loops = append(f.loops, loopTargets{end, increment})
+		f.loops = append(f.loops, loopTargets{end: end, step: increment, cleanupDepth: len(f.cleanups)})
 		f.statement(s.body)
 		f.loops = f.loops[:len(f.loops)-1]
 		f.branch(increment)
@@ -205,6 +218,7 @@ func (f *functionEmitter) statement(s *stmt) {
 		f.label(end)
 	case stmtBreak, stmtContinue:
 		loop := f.loops[len(f.loops)-1]
+		f.emitCleanups(loop.cleanupDepth)
 		if s.kind == stmtBreak {
 			f.branch(loop.end)
 		} else {
@@ -213,6 +227,40 @@ func (f *functionEmitter) statement(s *stmt) {
 	case stmtEmpty:
 	default:
 		panic("invalid analyzed statement")
+	}
+}
+
+// captureDefer evaluates arguments once, in source order, and saves their values.
+// The call template then loads those hidden slots only when its scope exits.
+func (f *functionEmitter) captureDefer(s *stmt) {
+	call := *s.value
+	arguments := call.arguments
+	if call.kind == exprPrint {
+		arguments = []*expr{call.value}
+	}
+	captured := make([]*expr, len(arguments))
+	for i, argument := range arguments {
+		value := f.expression(argument)
+		variable := s.captures[i]
+		f.instruction(fmt.Sprintf("store %s %s, ptr %%v%d", value.ty.llvm(), value.operand, variable))
+		captured[i] = &expr{kind: exprLoad, ty: value.ty, target: &lvalue{ty: value.ty, variable: variable}}
+	}
+	if call.kind == exprPrint {
+		call.value = captured[0]
+	} else {
+		call.arguments = captured
+	}
+	scope := len(f.cleanups) - 1
+	f.cleanups[scope] = append(f.cleanups[scope], &call)
+}
+
+// emitCleanups leaves compile-time scope lists intact: another branch may exit
+// the same scope later. Only reached registrations appear in the current list.
+func (f *functionEmitter) emitCleanups(depth int) {
+	for scope := len(f.cleanups) - 1; scope >= depth; scope-- {
+		for i := len(f.cleanups[scope]) - 1; i >= 0; i-- {
+			f.expression(f.cleanups[scope][i])
+		}
 	}
 }
 func (f *functionEmitter) address(target *lvalue) string {

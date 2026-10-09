@@ -1,0 +1,25 @@
+using System;
+
+class Program
+{
+    static void DoSomething()
+    {
+        Console.WriteLine("function cleanup");
+    }
+
+    public static int Main()
+    {
+        defer DoSomething();
+
+        {
+            int value = 1;
+            defer Console.WriteLine(value);
+            defer Console.WriteLine("second cleanup");
+            value = 2;
+            Console.WriteLine("inside block");
+        }
+
+        Console.WriteLine("after block");
+        return 0;
+    }
+}

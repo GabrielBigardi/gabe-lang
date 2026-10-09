@@ -138,7 +138,12 @@ func (c *checker) lookup(name string, span Span) (int, error) {
 func (c *checker) scopedStatement(s *astStmt) (*stmt, bool, error) {
 	c.scopes = append(c.scopes, make(map[string]int))
 	defer func() { c.scopes = c.scopes[:len(c.scopes)-1] }()
-	return c.statement(s)
+	checked, ends, err := c.statement(s)
+	// A single branch/loop statement has the same cleanup scope as a braced body.
+	if err == nil && checked.kind != stmtBlock {
+		checked = &stmt{kind: stmtBlock, statements: []*stmt{checked}}
+	}
+	return checked, ends, err
 }
 func (c *checker) condition(e *astExpr) (*expr, error) {
 	value, err := c.expression(e)
@@ -198,6 +203,24 @@ func (c *checker) statement(s *astStmt) (*stmt, bool, error) {
 			return nil, false, err
 		}
 		result.value = value
+	case stmtDefer:
+		if s.value.kind != exprCall {
+			return nil, false, diagnostic(s.value.span, "defer requires a function call, such as 'defer DoSomething();'")
+		}
+		value, err := c.expression(s.value)
+		if err != nil {
+			return nil, false, err
+		}
+		result.value = value
+		arguments := value.arguments
+		if value.kind == exprPrint {
+			arguments = []*expr{value.value}
+		}
+		// Captures are hidden locals, with slots allocated in the function entry.
+		for _, argument := range arguments {
+			result.captures = append(result.captures, len(c.variables))
+			c.variables = append(c.variables, argument.ty)
+		}
 	case stmtReturn:
 		terminates = true
 		if c.function.returnType == voidType {
