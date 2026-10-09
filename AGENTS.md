@@ -79,7 +79,7 @@ Format edits with `gofmt -w cmd compiler internal tools`. Run `go test ./compile
 - Preserve the LLVM compatibility fixture captured from Rust commit `60f13cb`. Update its golden IR only for an intentional backend change, with native behavior tests and a documented reason.
 - Update the language reference, examples, and CLI help when behavior changes. Keep architecture decisions in `docs/decisions/`.
 - Distinguish LLVM IR emission, object generation, linking, and execution when reporting target support. Emitting an ARM64/macOS object on Windows does not prove a linked macOS application runs.
-- Do not silently change licensing, publish packages, or make the repository public. The owner requested a private GitHub repository.
+- The owner requested a public GitHub repository after a privacy audit. Do not change repository visibility or licensing, or publish packages, without an explicit owner instruction. Use the owner's GitHub noreply email for commits and keep personal contact details out of committed metadata.
 
 ## Current baseline and next work
 

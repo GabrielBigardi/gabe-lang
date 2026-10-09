@@ -101,6 +101,6 @@ Validate changes with `scripts/check.ps1` (PowerShell) or `scripts/check.sh` (PO
 
 ## Repository and contribution
 
-The GitHub repository is [GabrielBigardi/gabe-lang](https://github.com/GabrielBigardi/gabe-lang) and is **private**. [Compiler CI](https://github.com/GabrielBigardi/gabe-lang/actions/workflows/ci.yml) validates pushes to `main` and pull requests. The initialization and private publishing scripts remain available for setting up a new copy; they are not needed for normal development in this repository.
+The GitHub repository is [GabrielBigardi/gabe-lang](https://github.com/GabrielBigardi/gabe-lang) and is **public**. [Compiler CI](https://github.com/GabrielBigardi/gabe-lang/actions/workflows/ci.yml) validates pushes to `main` and pull requests. The initialization and private publishing scripts remain available for setting up a new copy; they default to private repositories and are not needed for normal development here.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), and [the roadmap](docs/roadmap.md). A distribution license has not been selected.

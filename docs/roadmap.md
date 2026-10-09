@@ -17,7 +17,7 @@ Implemented:
 - LLVM IR, cross-target object generation, native linking and execution.
 - Frontend, native, fuzz, and LLVM compatibility tests; contributor guidance; Windows/Linux/macOS CI on x64 and ARM64.
 
-The private GitHub repository is initialized and published. The original Rust bootstrap passed all six native CI jobs; the Go migration retains the same matrix and its LLVM backend. See [ADR 0002](decisions/0002-go-compiler.md).
+The public GitHub repository is initialized and published. The original Rust bootstrap passed all six native CI jobs; the Go migration retains the same matrix and its LLVM backend. See [ADR 0002](decisions/0002-go-compiler.md).
 
 ## Next: useful native programs
 
