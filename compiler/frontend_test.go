@@ -9,9 +9,11 @@ import (
 	"testing"
 )
 
-func program(body string) string { return "class Program { static int Main() { " + body + " } }" }
+func program(body string) string {
+	return "public class Program { public static int Main() { " + body + " } }"
+}
 func TestExamplesPassAnalysis(t *testing.T) {
-	for _, name := range []string{"hello", "fibonacci", "pointers", "interop", "defer"} {
+	for _, name := range []string{"hello", "fibonacci", "pointers", "interop", "defer", "printing"} {
 		t.Run(name, func(t *testing.T) {
 			source, err := os.ReadFile(filepath.Join("..", "examples", name+".gb"))
 			if err != nil {
@@ -34,10 +36,10 @@ func TestDiagnosesInvalidProgramsBeforeCodegen(t *testing.T) {
 		{"break; return 0;", "only valid inside a loop"},
 		{"continue; return 0;", "only valid inside a loop"},
 		{"int x = 1;", "not all paths"},
-		{"var x = Console.WriteLine(1); return 0;", "cannot have type void"},
+		{"var x = PrintLine(1); return 0;", "cannot have type void"},
 		{"1 + 2; return 0;", "expression statement"},
-		{"Console.WriteLine(1, 2); return 0;", "zero or one"},
-		{"Console.Write(); return 0;", "one value"},
+		{"PrintLine(1, 2); return 0;", "zero or one"},
+		{"Print(); return 0;", "one value"},
 		{"for (int i = 0; i < 1; i++) {} return i;", "unknown variable"},
 		{"unsafe { int x = 1; *x = 3; } return 0;", "requires a pointer"},
 		{"long x = 9223372036854775808; return 0;", "signed 64-bit"},
@@ -68,22 +70,22 @@ func assertDiagnostic(t *testing.T, source, expected string) {
 }
 func TestValidatesEntrySignaturesAndFunctionCalls(t *testing.T) {
 	cases := []struct{ source, expected string }{
-		{"int Add(int x) { return x; }", "missing entry"},
-		{"int Main(int x) { return x; }", "entry point"},
-		{"unsafe int Main() { return 0; }", "entry point"},
-		{"int Main() { return 0; } void Main() {}", "duplicate function"},
-		{"class A { static int Main() { return 0; } } class B { static int Main() { return 0; } }", "exactly one Main"},
-		{"int F(int x) { return x; } int Main() { return F(); }", "expects 1 arguments"},
-		{"extern int abs(int x); int Main() { return abs(-1); }", "require an unsafe"},
-		{"extern bool flag(); int Main() { return 0; }", "extern bool"},
-		{"extern int flag(bool b); int Main() { return 0; }", "extern bool"},
-		{"extern int gb_1(); int Main() { return 0; }", "reserved"},
-		{"extern int printf(); int Main() { return 0; }", "reserved"},
-		{"class Program { int Main() { return 0; } }", "must be static"},
-		{"class Program { static extern int abs(int x); static int Main() { return 0; } }", "file scope"},
-		{"void F(void x) {} int Main() { return 0; }", "parameters cannot have type void"},
-		{"extern void* F(); int Main() { unsafe { *F() = 1; } return 0; }", "cannot dereference a void pointer"},
-		{"unsafe int F() { return 0; } int Main() { return F(); }", "require an unsafe"},
+		{"public int Add(int x) { return x; }", "missing entry"},
+		{"public int Main(int x) { return x; }", "entry point"},
+		{"public unsafe int Main() { return 0; }", "entry point"},
+		{"public int Main() { return 0; } public void Main() {}", "duplicate function"},
+		{"public class A { public static int Main() { return 0; } } public class B { public static int Main() { return 0; } }", "exactly one Main"},
+		{"public int F(int x) { return x; } public int Main() { return F(); }", "expects 1 arguments"},
+		{"public extern int abs(int x); public int Main() { return abs(-1); }", "require an unsafe"},
+		{"public extern bool flag(); public int Main() { return 0; }", "extern bool"},
+		{"public extern int flag(bool b); public int Main() { return 0; }", "extern bool"},
+		{"public extern int gb_1(); public int Main() { return 0; }", "reserved"},
+		{"public extern int printf(); public int Main() { return 0; }", "reserved"},
+		{"public class Program { public int Main() { return 0; } }", "must be static"},
+		{"public class Program { public static extern int abs(int x); public static int Main() { return 0; } }", "file scope"},
+		{"public void F(void x) {} public int Main() { return 0; }", "parameters cannot have type void"},
+		{"public extern void* F(); public int Main() { unsafe { *F() = 1; } return 0; }", "cannot dereference a void pointer"},
+		{"public unsafe int F() { return 0; } public int Main() { return F(); }", "require an unsafe"},
 	}
 	for _, test := range cases {
 		t.Run(test.source, func(t *testing.T) { assertDiagnostic(t, test.source, test.expected) })
@@ -91,7 +93,7 @@ func TestValidatesEntrySignaturesAndFunctionCalls(t *testing.T) {
 }
 func TestSupportsForwardCallsRecursionAndWidening(t *testing.T) {
 	for _, source := range []string{
-		"int Main() { double d = F(4); return 0; } long F(int n) { if (n <= 1) return 1; return n * F(n - 1); }",
+		"public int Main() { double d = F(4); return 0; } public long F(int n) { if (n <= 1) return 1; return n * F(n - 1); }",
 		program("int a = -2147483648; long b = -9223372036854775808L; long c = a; double d = b; return 0;"),
 	} {
 		if _, err := Check(source); err != nil {
@@ -100,7 +102,7 @@ func TestSupportsForwardCallsRecursionAndWidening(t *testing.T) {
 	}
 }
 func TestHandlesScopesWithoutLeakingBranchVariables(t *testing.T) {
-	if _, err := Check(program("int x = 1; { int x = 2; Console.WriteLine(x); } return x;")); err != nil {
+	if _, err := Check(program("int x = 1; { int x = 2; PrintLine(x); } return x;")); err != nil {
 		t.Fatal(err)
 	}
 	assertDiagnostic(t, program("if (true) { int x = 1; } return x;"), "unknown variable")
@@ -108,7 +110,7 @@ func TestHandlesScopesWithoutLeakingBranchVariables(t *testing.T) {
 	assertDiagnostic(t, program("while (false) int x = 1; return x;"), "unknown variable")
 }
 func TestLLVMEmissionIsDeterministicAndTargetSpecific(t *testing.T) {
-	source := program("Console.WriteLine(\"Olá 🌍 %s\"); return 0;")
+	source := program("PrintLine(\"Olá 🌍 %s\"); return 0;")
 	first, err := Compile(source, "linux-arm64")
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +129,7 @@ func TestLLVMEmissionIsDeterministicAndTargetSpecific(t *testing.T) {
 	}
 }
 func TestReportsSourceLocationsIncludingUnicode(t *testing.T) {
-	source := "int Main() {\n    Console.WriteLine(\"Olá\");\n    return unknown;\n}"
+	source := "public int Main() {\n    PrintLine(\"Olá\");\n    return unknown;\n}"
 	_, err := Check(source)
 	var diagnostic *Diagnostic
 	if !errors.As(err, &diagnostic) {
@@ -137,8 +139,8 @@ func TestReportsSourceLocationsIncludingUnicode(t *testing.T) {
 	if !strings.HasPrefix(rendered, "test.gb:3:12: error:") {
 		t.Fatal(rendered)
 	}
-	assertDiagnostic(t, "int Main() { return é; }", "unexpected character 'é'")
-	source = "void Main() { Console.WriteLine(\"🌍\"); @ }"
+	assertDiagnostic(t, "public int Main() { return é; }", "unexpected character 'é'")
+	source = "public void Main() { PrintLine(\"🌍\"); @ }"
 	_, err = Check(source)
 	if !errors.As(err, &diagnostic) {
 		t.Fatal(err)
@@ -149,7 +151,7 @@ func TestReportsSourceLocationsIncludingUnicode(t *testing.T) {
 	}
 }
 func TestMalformedInputIsDiagnosticInsteadOfPanic(t *testing.T) {
-	for _, source := range []string{"", "/*", "int Main() {", "class Program {", "int Main() { Console.WriteLine(\"oops); }", "int Main() { double x = 1e+; }", "int Main() { Console.WriteLine(\"\\q\"); }", "int Main() { Console.WriteLine(\"\x00\"); }", "\xff", "int Main(,)", "int Main() { return --; }"} {
+	for _, source := range []string{"", "/*", "public int Main() {", "public class Program {", "public int Main() { PrintLine(\"oops); }", "public int Main() { double x = 1e+; }", "public int Main() { PrintLine(\"\\q\"); }", "public int Main() { PrintLine(\"\x00\"); }", "\xff", "public int Main(,)", "public int Main() { return --; }"} {
 		if _, err := Check(source); err == nil {
 			t.Fatalf("accepted malformed input %q", source)
 		}
@@ -173,12 +175,15 @@ func TestLLVMMatchesRustBaseline(t *testing.T) {
 	}
 }
 func FuzzCheck(f *testing.F) {
-	for _, source := range []string{"", "int Main() { return 0; }", "class Program {", "void Main() { Console.WriteLine(\"Olá 🌍\"); }", "int Main() { unsafe { int x = 1; int* p = &x; *p += 1; } return 0; }"} {
+	for _, source := range []string{"", "public int Main() { return 0; }", "public class Program {", "public void Main() { PrintLine(\"Olá 🌍\"); }", "public int Main() { unsafe { int x = 1; int* p = &x; *p += 1; } return 0; }"} {
 		f.Add(source)
 	}
-	f.Add("void Main() { defer Console.WriteLine(1); { defer Console.WriteLine(true && 4 / 2 == 2); } }")
-	f.Add("void Main() { for (int i = 0; i < 2; i++) { defer Console.WriteLine(i); if (i == 0) continue; break; } }")
-	f.Add("void Main() { defer; }")
+	f.Add("public void Main() { defer PrintLine(1); { defer PrintLine(true && 4 / 2 == 2); } }")
+	f.Add("public void Main() { for (int i = 0; i < 2; i++) { defer PrintLine(i); if (i == 0) continue; break; } }")
+	f.Add("public void Main() { defer; }")
+	f.Add("private class Program { private static int F() { return 42; } public static void Main() { Print(F()); PrintLine(); } }")
+	f.Add("public private void Main() {}")
+	f.Add("public class Program { static void Main() {} }")
 	f.Fuzz(func(t *testing.T, source string) {
 		_, err := Compile(source, "linux-x64")
 		if err == nil {

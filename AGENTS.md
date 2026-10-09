@@ -65,6 +65,8 @@ Format edits with `gofmt -w cmd compiler internal tools`. Run `go test ./compile
 - Report invalid source with a diagnostic and span. User errors must not panic. Assertions in lowering may only enforce analyzed invariants.
 - New semantics need both passing behavior tests and rejection tests where applicable. Check native results at `-O0` and `-O3` for changes that can affect generated code.
 - Preserve left-to-right evaluation, single evaluation of assignment addresses, and short-circuit `&&` / `||`.
+- Require exactly one `public` / `private` modifier on classes, functions, methods, and externs. Reject missing, repeated, conflicting, or `internal` access modifiers. Private methods are callable only inside their class; private file-scope declarations are visible throughout the current source file.
+- Use unqualified `Print` / `PrintLine` built-ins for output; legacy `Console` output built-ins are removed. Reserve these function names at file scope and keep ordinary qualified class methods distinct.
 - `defer` captures arguments once at registration and runs calls in reverse order at lexical scope exit, including implicit branch/loop body scopes. Clean up only scopes left by `break` / `continue`; evaluate return values before cleanup. Traps do not unwind.
 - Emit allocas in the entry block. Terminate every LLVM basic block. Update phi predecessors after expressions that introduce control flow.
 - Use opaque LLVM pointers and explicit Gabe pointee types. Native pointer operations and extern calls require `unsafe` in Gabe source. Unsafe source is a programmer contract; no lifetime/borrow analysis exists yet.

@@ -161,8 +161,18 @@ type astParameter struct {
 	ty   valueType
 	span Span
 }
+
+type accessLevel uint8
+
+const (
+	accessUnspecified accessLevel = iota
+	accessPublic
+	accessPrivate
+)
+
 type astFunction struct {
 	name, container string
+	access          accessLevel
 	returnType      valueType
 	parameters      []astParameter
 	body            *astStmt

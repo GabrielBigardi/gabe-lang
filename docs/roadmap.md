@@ -9,8 +9,9 @@ Implemented:
 - Go module with a reusable compiler package and `gabe` CLI, using only the standard library.
 - Lexer, parser, source diagnostics, typed HIR, semantic checking.
 - Primitive types, functions/static class containers, recursion, mutable locals.
+- Required `public` / `private` declarations and checked private class methods.
 - Expressions, widening, assignment, short-circuit booleans, integer trap behavior.
-- Conditionals, loops, loop control, and console output.
+- Conditionals, loops, loop control, and `Print` / `PrintLine` output.
 - Scope-exit `defer` calls, captured arguments, and cleanup on returns and loop exits.
 - Unsafe stack pointers and scalar C ABI extern calls.
 - LLVM IR, cross-target object generation, native linking and execution.

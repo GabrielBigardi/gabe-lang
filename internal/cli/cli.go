@@ -36,7 +36,10 @@ Options:
   -h, --help               Show this help
   -V, --version            Show version
 
-Deferred calls:
+Language syntax:
+  public / private         Required on every class, function, method, and extern
+  Print(value);            Print a value without appending a newline
+  PrintLine(value);        Print a value and a newline; PrintLine() prints a newline
   defer Call();            Capture arguments now; call when the current scope exits
 `
 

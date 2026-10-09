@@ -1,0 +1,13 @@
+public class Program
+{
+    public static void Main()
+    {
+        Print("Hello");
+        Print(", Gabe");
+        PrintLine("!");
+
+        Print("First line\nSecond line");
+        PrintLine();
+        PrintLine(42);
+    }
+}

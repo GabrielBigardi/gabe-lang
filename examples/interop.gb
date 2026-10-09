@@ -1,11 +1,11 @@
 // C's abs(int) is provided by the platform C runtime.
-extern int abs(int value);
+public extern int abs(int value);
 
-int Main()
+public int Main()
 {
     unsafe
     {
-        Console.WriteLine(abs(-42));
+        PrintLine(abs(-42));
     }
     return 0;
 }

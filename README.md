@@ -5,13 +5,11 @@
 The goal is Rust/C++-class performance and low-level control with the simplicity and readability of C#. Version 0.1 establishes a working compiler; performance parity has not been benchmarked.
 
 ```csharp
-using System;
-
-class Program
+public class Program
 {
     public static int Main()
     {
-        Console.WriteLine("Hello from Gabe!");
+        PrintLine("Hello from Gabe!");
         return 0;
     }
 }
@@ -34,6 +32,7 @@ go run ./cmd/gabe run examples/hello.gb
 go run ./cmd/gabe run examples/fibonacci.gb --release
 go run ./cmd/gabe run examples/pointers.gb
 go run ./cmd/gabe run examples/defer.gb
+go run ./cmd/gabe run examples/printing.gb
 ```
 
 The compiled CLI is `bin/gabe` (`bin/gabe.exe` on Windows). To install it in your Go binary directory, run `go install ./cmd/gabe`. The compiler uses only the Go standard library and needs no cgo or LLVM bindings. Generated Gabe programs are native LLVM output and do not include the Go runtime or garbage collector.
@@ -52,10 +51,11 @@ Use `GABE_CLANG` / `--clang` to select a Clang executable, or `GABE_LLC` / `--ll
 - A lexer, parser, type checker, typed HIR, and LLVM IR generator written in Go with no third-party dependencies.
 - `int`, `long`, `double`, `bool`, `string`, `void`, typed pointers, numeric widening, and `var` inference.
 - Functions, recursion, static methods grouped in classes, and `int Main()` / `void Main()` entry points.
+- Required `public` / `private` modifiers on declarations, with private methods restricted to their class.
 - Scoped mutable variables, assignment, arithmetic, comparisons, short-circuit booleans, and prefix/postfix increment.
 - `if` / `else`, `while`, `for`, `break`, `continue`, and `return`.
 - `defer Call();` with captured arguments and reverse-order cleanup when the current scope exits.
-- `Console.Write` / `Console.WriteLine` for primitive values and UTF-8 string literals.
+- `Print` / `PrintLine` for primitive values and UTF-8 string literals, without an import.
 - Unsafe stack addresses, pointer dereferencing, and primitive C ABI calls.
 - Source diagnostics, native executables, object files, LLVM IR, optimization options, and target triples.
 

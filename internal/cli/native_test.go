@@ -134,35 +134,35 @@ func assertProgram(t *testing.T, source, expected string) {
 func TestHelloAndLiteralOutputAreNative(t *testing.T) {
 	t.Parallel()
 	assertProgram(t, readExample(t, "hello"), "Hello from Gabe!\n")
-	assertProgram(t, `void Main() { Console.Write("100% %s %n"); Console.WriteLine(); Console.WriteLine(true); Console.WriteLine(false); Console.WriteLine(3.5); Console.WriteLine(9000000000L); }`, "100% %s %n\nTrue\nFalse\n3.5\n9000000000\n")
-	assertProgram(t, `void Main() { Console.WriteLine("Olá 🌍 %s"); }`, "Olá 🌍 %s\n")
+	assertProgram(t, `public void Main() { Print("100% %s %n"); PrintLine(); PrintLine(true); PrintLine(false); PrintLine(3.5); PrintLine(9000000000L); }`, "100% %s %n\nTrue\nFalse\n3.5\n9000000000\n")
+	assertProgram(t, `public void Main() { PrintLine("Olá 🌍 %s"); }`, "Olá 🌍 %s\n")
 }
 func TestFunctionsLoopsAndRecursionWork(t *testing.T) {
 	t.Parallel()
 	assertProgram(t, readExample(t, "fibonacci"), "102334155\n")
-	assertProgram(t, "int Main() { Console.WriteLine(Factorial(6)); return 0; } long Factorial(int n) { if (n <= 1) return 1; else return n * Factorial(n - 1); }", "720\n")
+	assertProgram(t, "public int Main() { PrintLine(Factorial(6)); return 0; } public long Factorial(int n) { if (n <= 1) return 1; else return n * Factorial(n - 1); }", "720\n")
 }
 func TestPointersAndCInteropWork(t *testing.T) {
 	t.Parallel()
 	assertProgram(t, readExample(t, "pointers"), "42\n")
 	assertProgram(t, readExample(t, "interop"), "42\n")
-	assertProgram(t, "unsafe int* Get(int* p, int* count) { (*count)++; return p; } int Main() { int x = 5; int count = 0; unsafe { *Get(&x, &count) += 3; } Console.WriteLine(x); Console.WriteLine(count); return 0; }", "8\n1\n")
+	assertProgram(t, "public unsafe int* Get(int* p, int* count) { (*count)++; return p; } public int Main() { int x = 5; int count = 0; unsafe { *Get(&x, &count) += 3; } PrintLine(x); PrintLine(count); return 0; }", "8\n1\n")
 }
 func TestShortCircuitPreservesSideEffectsAndNestedControlFlow(t *testing.T) {
 	t.Parallel()
-	assertProgram(t, "int Main() { int x = 0; bool a = false && ++x > 0; bool b = true || ++x > 0; bool c = true && (++x == 1 || ++x == 99); bool d = true && 8 / 2 == 4 && ++x == 2; Console.WriteLine(x); Console.WriteLine(a); Console.WriteLine(b); Console.WriteLine(c); Console.WriteLine(d); return 0; }", "2\nFalse\nTrue\nTrue\nTrue\n")
+	assertProgram(t, "public int Main() { int x = 0; bool a = false && ++x > 0; bool b = true || ++x > 0; bool c = true && (++x == 1 || ++x == 99); bool d = true && 8 / 2 == 4 && ++x == 2; PrintLine(x); PrintLine(a); PrintLine(b); PrintLine(c); PrintLine(d); return 0; }", "2\nFalse\nTrue\nTrue\nTrue\n")
 }
 func TestContinueBreakAndPostfixHaveCorrectOrder(t *testing.T) {
 	t.Parallel()
-	assertProgram(t, "int Main() { int sum = 0; for (int i = 0; i < 10; i++) { if (i == 2) continue; if (i == 5) break; sum += i; } int j = 0; while (j < 4) { j++; if (j == 2) continue; sum += j; } int old = j++; int next = ++j; Console.WriteLine(sum); Console.WriteLine(old); Console.WriteLine(next); return 0; }", "16\n4\n6\n")
+	assertProgram(t, "public int Main() { int sum = 0; for (int i = 0; i < 10; i++) { if (i == 2) continue; if (i == 5) break; sum += i; } int j = 0; while (j < 4) { j++; if (j == 2) continue; sum += j; } int old = j++; int next = ++j; PrintLine(sum); PrintLine(old); PrintLine(next); return 0; }", "16\n4\n6\n")
 }
 func TestIntegerWrappingWideningAndFloatComparisonsWork(t *testing.T) {
 	t.Parallel()
-	assertProgram(t, "int Main() { int x = 2147483647; x++; Console.WriteLine(x); long y = x; Console.WriteLine(y); double d = 7; Console.WriteLine(d / 2); Console.WriteLine(d % 2.0); double nan = 0.0 / 0.0; Console.WriteLine(nan == nan); Console.WriteLine(nan != nan); Console.WriteLine(-17 / 5); Console.WriteLine(-17 % 5); return 0; }", "-2147483648\n-2147483648\n3.5\n1\nFalse\nTrue\n-3\n-2\n")
+	assertProgram(t, "public int Main() { int x = 2147483647; x++; PrintLine(x); long y = x; PrintLine(y); double d = 7; PrintLine(d / 2); PrintLine(d % 2.0); double nan = 0.0 / 0.0; PrintLine(nan == nan); PrintLine(nan != nan); PrintLine(-17 / 5); PrintLine(-17 % 5); return 0; }", "-2147483648\n-2147483648\n3.5\n1\nFalse\nTrue\n-3\n-2\n")
 }
 func TestArgumentAndAssignmentEvaluationOrder(t *testing.T) {
 	t.Parallel()
-	assertProgram(t, "unsafe int* Get(int* p, int* count) { (*count)++; return p; } unsafe int Set(int* p) { *p = 100; return 3; } int Pair(int a, int b) { return a * 10 + b; } int Main() { int x = 5; int count = 0; unsafe { *Get(&x, &count) += Set(&x); } Console.WriteLine(x); Console.WriteLine(count); int i = 1; Console.WriteLine(Pair(++i, ++i)); return 0; }", "8\n1\n23\n")
+	assertProgram(t, "public unsafe int* Get(int* p, int* count) { (*count)++; return p; } public unsafe int Set(int* p) { *p = 100; return 3; } public int Pair(int a, int b) { return a * 10 + b; } public int Main() { int x = 5; int count = 0; unsafe { *Get(&x, &count) += Set(&x); } PrintLine(x); PrintLine(count); int i = 1; PrintLine(Pair(++i, ++i)); return 0; }", "8\n1\n23\n")
 }
 func TestRustBaselineIsNative(t *testing.T) {
 	t.Parallel()
@@ -175,8 +175,8 @@ func TestRustBaselineIsNative(t *testing.T) {
 
 func TestExitCodesAndCLIErrorsPropagate(t *testing.T) {
 	t.Parallel()
-	f := newFixture(t, "int Main() { return 0; }")
-	f.write("program.part.gb", "int Main() { return 0; }")
+	f := newFixture(t, "public int Main() { return 0; }")
+	f.write("program.part.gb", "public int Main() { return 0; }")
 	output := f.command("build", "program.part.gb", "--emit", "llvm")
 	if output.code != 0 {
 		t.Fatal(output.stderr)
@@ -189,7 +189,7 @@ func TestExitCodesAndCLIErrorsPropagate(t *testing.T) {
 		t.Fatalf("incorrect overwrite rejection: %+v", output)
 	}
 	source, err := os.ReadFile(filepath.Join(f.directory, "program.gb"))
-	if err != nil || string(source) != "int Main() { return 0; }" {
+	if err != nil || string(source) != "public int Main() { return 0; }" {
 		t.Fatal("source was overwritten", err)
 	}
 	for _, test := range []struct {
@@ -211,13 +211,13 @@ func TestExitCodesAndCLIErrorsPropagate(t *testing.T) {
 			t.Fatalf("%v: %+v", test.arguments, output)
 		}
 	}
-	f.write("program.gb", "int Main() { return true; }")
+	f.write("program.gb", "public int Main() { return true; }")
 	output = f.command("check", "program.gb")
 	if output.code == 0 || !strings.Contains(output.stderr, "program.gb:1:") {
 		t.Fatalf("incorrect source diagnostic: %+v", output)
 	}
 	requireNative(t)
-	f.write("program.gb", "int Main() { return 7; }")
+	f.write("program.gb", "public int Main() { return 7; }")
 	output = f.command("run", "program.gb")
 	if output.code != 7 {
 		t.Fatalf("expected program exit 7, got %+v", output)
@@ -227,14 +227,14 @@ func TestInvalidIntegerDivisionAndRemainderTrap(t *testing.T) {
 	t.Parallel()
 	requireNative(t)
 	for _, source := range []string{
-		"int Main() { int zero = 0; return 42 / zero; }",
-		"int Main() { int zero = 0; return 42 % zero; }",
-		"int Main() { int min = -2147483648; return min / -1; }",
-		"int Main() { int min = -2147483648; return min % -1; }",
-		"void Main() { long zero = 0L; Console.WriteLine(42L / zero); }",
-		"void Main() { long zero = 0L; Console.WriteLine(42L % zero); }",
-		"void Main() { long min = -9223372036854775808L; Console.WriteLine(min / -1L); }",
-		"void Main() { long min = -9223372036854775808L; Console.WriteLine(min % -1L); }",
+		"public int Main() { int zero = 0; return 42 / zero; }",
+		"public int Main() { int zero = 0; return 42 % zero; }",
+		"public int Main() { int min = -2147483648; return min / -1; }",
+		"public int Main() { int min = -2147483648; return min % -1; }",
+		"public void Main() { long zero = 0L; PrintLine(42L / zero); }",
+		"public void Main() { long zero = 0L; PrintLine(42L % zero); }",
+		"public void Main() { long min = -9223372036854775808L; PrintLine(min / -1L); }",
+		"public void Main() { long min = -9223372036854775808L; PrintLine(min % -1L); }",
 	} {
 		f := newFixture(t, source)
 		for _, optimization := range []string{"-O0", "-O3"} {
@@ -256,7 +256,7 @@ func TestInvalidIntegerDivisionAndRemainderTrap(t *testing.T) {
 func TestEmitsObjectsForPrimaryTargetFamilies(t *testing.T) {
 	t.Parallel()
 	requireNative(t)
-	f := newFixture(t, "int Main() { return 42; }")
+	f := newFixture(t, "public int Main() { return 42; }")
 	for _, test := range []struct {
 		target string
 		magic  []byte

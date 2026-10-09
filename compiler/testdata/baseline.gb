@@ -1,25 +1,23 @@
-using System;
+public extern int abs(int value);
 
-extern int abs(int value);
-
-unsafe int* Address(int* value, int* count)
+public unsafe int* Address(int* value, int* count)
 {
     (*count)++;
     return value;
 }
 
-class Program
+public class Program
 {
-    static long Factorial(int n)
+    public static long Factorial(int n)
     {
         if (n <= 1) return 1;
         else return n * Factorial(n - 1);
     }
 
-    static void Print(string text)
+    public static void Print(string text)
     {
-        System.Console.Write(text);
-        Console.WriteLine();
+        Print(text);
+        PrintLine();
     }
 
     public static int Main()
@@ -34,8 +32,8 @@ class Program
         number *= 2.0;
         number /= 2;
         number %= 5.0;
-        Console.WriteLine(number);
-        Console.WriteLine(-9223372036854775808L);
+        PrintLine(number);
+        PrintLine(-9223372036854775808L);
         int calls = 0;
         value = 5;
         unsafe
@@ -44,13 +42,13 @@ class Program
             int** pp = &p;
             *Address(&value, &calls) += abs(-3);
             **pp = value;
-            Console.WriteLine(p == &value);
-            Console.WriteLine(p != &value);
+            PrintLine(p == &value);
+            PrintLine(p != &value);
         }
         bool yes = true && (8 / 2 == 4 || ++calls == 100);
         bool no = false || (yes && !(calls < 1));
-        Console.WriteLine(yes == no);
-        Console.WriteLine(yes != no);
+        PrintLine(yes == no);
+        PrintLine(yes != no);
         for (int i = 0; i < 4; i++)
         {
             if (i == 1) continue;
@@ -71,8 +69,8 @@ class Program
         bool d = 1.0 < 2.0;
         bool e = 1.0 == 2.0;
         bool f = 1.0 != 2.0;
-        Print("Olá 🌍 %s %n\n\t\"\\");
-        Console.WriteLine(Factorial(6));
+        Program.Print("Olá 🌍 %s %n\n\t\"\\");
+        PrintLine(Factorial(6));
         return 0;
     }
 }
