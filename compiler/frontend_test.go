@@ -11,7 +11,7 @@ import (
 
 func program(body string) string { return "class Program { static int Main() { " + body + " } }" }
 func TestExamplesPassAnalysis(t *testing.T) {
-	for _, name := range []string{"hello", "fibonacci", "pointers", "interop"} {
+	for _, name := range []string{"hello", "fibonacci", "pointers", "interop", "defer"} {
 		t.Run(name, func(t *testing.T) {
 			source, err := os.ReadFile(filepath.Join("..", "examples", name+".gb"))
 			if err != nil {
@@ -176,6 +176,9 @@ func FuzzCheck(f *testing.F) {
 	for _, source := range []string{"", "int Main() { return 0; }", "class Program {", "void Main() { Console.WriteLine(\"Olá 🌍\"); }", "int Main() { unsafe { int x = 1; int* p = &x; *p += 1; } return 0; }"} {
 		f.Add(source)
 	}
+	f.Add("void Main() { defer Console.WriteLine(1); { defer Console.WriteLine(true && 4 / 2 == 2); } }")
+	f.Add("void Main() { for (int i = 0; i < 2; i++) { defer Console.WriteLine(i); if (i == 0) continue; break; } }")
+	f.Add("void Main() { defer; }")
 	f.Fuzz(func(t *testing.T, source string) {
 		_, err := Compile(source, "linux-x64")
 		if err == nil {

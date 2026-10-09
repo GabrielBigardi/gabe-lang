@@ -11,6 +11,7 @@ Implemented:
 - Primitive types, functions/static class containers, recursion, mutable locals.
 - Expressions, widening, assignment, short-circuit booleans, integer trap behavior.
 - Conditionals, loops, loop control, and console output.
+- Scope-exit `defer` calls, captured arguments, and cleanup on returns and loop exits.
 - Unsafe stack pointers and scalar C ABI extern calls.
 - LLVM IR, cross-target object generation, native linking and execution.
 - Frontend, native, fuzz, and LLVM compatibility tests; contributor guidance; Windows/Linux/macOS CI on x64 and ARM64.

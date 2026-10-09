@@ -65,6 +65,7 @@ Format edits with `gofmt -w cmd compiler internal tools`. Run `go test ./compile
 - Report invalid source with a diagnostic and span. User errors must not panic. Assertions in lowering may only enforce analyzed invariants.
 - New semantics need both passing behavior tests and rejection tests where applicable. Check native results at `-O0` and `-O3` for changes that can affect generated code.
 - Preserve left-to-right evaluation, single evaluation of assignment addresses, and short-circuit `&&` / `||`.
+- `defer` captures arguments once at registration and runs calls in reverse order at lexical scope exit, including implicit branch/loop body scopes. Clean up only scopes left by `break` / `continue`; evaluate return values before cleanup. Traps do not unwind.
 - Emit allocas in the entry block. Terminate every LLVM basic block. Update phi predecessors after expressions that introduce control flow.
 - Use opaque LLVM pointers and explicit Gabe pointee types. Native pointer operations and extern calls require `unsafe` in Gabe source. Unsafe source is a programmer contract; no lifetime/borrow analysis exists yet.
 - Integer add/subtract/multiply wrap. Do not introduce `nsw` / `nuw` without changing the specification. Integer divide/remainder trap on zero and signed MIN/-1. Floating arithmetic uses ordinary IEEE operations without fast-math.
@@ -80,4 +81,4 @@ Format edits with `gofmt -w cmd compiler internal tools`. Run `go test ./compile
 
 ## Current baseline and next work
 
-v0.1 has a single-file compiler, primitive types, functions/static class containers, console output, mutable locals, numeric widening, conditionals, loops, unsafe stack pointers, primitive C interop, LLVM IR/object/executable output, and target triples. See the roadmap for structs, arrays, memory ownership, modules, diagnostics/debug information, and performance work. Add features as complete vertical slices instead of placeholders.
+v0.1 has a single-file compiler, primitive types, functions/static class containers, console output, mutable locals, numeric widening, conditionals, loops, scope-exit deferred calls, unsafe stack pointers, primitive C interop, LLVM IR/object/executable output, and target triples. See the roadmap for structs, arrays, memory ownership, modules, diagnostics/debug information, and performance work. Add features as complete vertical slices instead of placeholders.

@@ -61,7 +61,7 @@ func (p *parser) name() token {
 		return t
 	}
 	switch t.text {
-	case "class", "static", "public", "private", "internal", "unsafe", "extern", "using", "namespace", "return", "if", "else", "while", "for", "break", "continue", "true", "false", "var", "void", "int", "long", "double", "bool", "string":
+	case "class", "static", "public", "private", "internal", "unsafe", "extern", "using", "namespace", "return", "defer", "if", "else", "while", "for", "break", "continue", "true", "false", "var", "void", "int", "long", "double", "bool", "string":
 		p.fail(t.span, "expected an identifier, found a keyword")
 		return t
 	}
@@ -188,6 +188,9 @@ func (p *parser) statement() *astStmt {
 		return p.block()
 	case p.take("unsafe"):
 		s.kind, s.body = stmtUnsafe, p.block()
+	case p.take("defer"):
+		s.kind, s.value = stmtDefer, p.expression()
+		p.expect(";")
 	case p.take("return"):
 		s.kind = stmtReturn
 		if !p.at(";") {

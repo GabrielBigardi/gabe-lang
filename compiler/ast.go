@@ -144,6 +144,7 @@ const (
 	stmtBreak
 	stmtContinue
 	stmtEmpty
+	stmtDefer
 )
 
 type astStmt struct {

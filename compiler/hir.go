@@ -16,6 +16,7 @@ type stmt struct {
 	kind                        stmtKind
 	statements                  []*stmt
 	variable                    int
+	captures                    []int
 	value, condition, step      *expr
 	body, elseBody, initializer *stmt
 }
