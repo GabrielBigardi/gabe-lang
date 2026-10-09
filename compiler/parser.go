@@ -11,7 +11,10 @@ type parser struct {
 	position int
 	err      *Diagnostic
 }
-type modifiers struct{ unsafe, external, static bool }
+type modifiers struct {
+	unsafe, external, static bool
+	access                   accessLevel
+}
 
 func parse(tokens []token) (*astProgram, error) {
 	p := &parser{tokens: tokens}
@@ -69,8 +72,10 @@ func (p *parser) name() token {
 	return t
 }
 func (p *parser) modifiers() modifiers {
+	start := p.current().span
 	var m modifiers
 	for {
+		span := p.current().span
 		switch {
 		case p.take("unsafe"):
 			m.unsafe = true
@@ -78,8 +83,24 @@ func (p *parser) modifiers() modifiers {
 			m.external = true
 		case p.take("static"):
 			m.static = true
-		case p.take("public"), p.take("private"), p.take("internal"):
+		case p.at("public") || p.at("private"):
+			if m.access != accessUnspecified {
+				p.fail(span, "declarations must have exactly one access modifier: 'public' or 'private'")
+				return m
+			}
+			if p.take("public") {
+				m.access = accessPublic
+			} else {
+				p.take("private")
+				m.access = accessPrivate
+			}
+		case p.take("internal"):
+			p.fail(span, "access modifier must be 'public' or 'private'; 'internal' is not supported")
+			return m
 		default:
+			if m.access == accessUnspecified {
+				p.fail(start, "declaration requires an explicit 'public' or 'private' access modifier")
+			}
 			return m
 		}
 	}
@@ -141,7 +162,7 @@ func (p *parser) program() *astProgram {
 	return program
 }
 func (p *parser) function(container string, m modifiers, start Span) *astFunction {
-	fn := &astFunction{container: container, returnType: p.ty(), unsafe: m.unsafe}
+	fn := &astFunction{container: container, access: m.access, returnType: p.ty(), unsafe: m.unsafe}
 	fn.name = p.name().text
 	if container != "" {
 		fn.name = container + "." + fn.name

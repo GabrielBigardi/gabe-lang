@@ -20,6 +20,8 @@
 
 The parser uses recursive descent for statements and precedence climbing for binary expressions. AST preserves source spans. Semantic analysis first collects all function signatures, enabling forward calls and recursion, then checks each body. Every local gets a unique ID and fixed type. Assignment targets use a separate typed lvalue representation so indirect addresses are evaluated once.
 
+The parser requires exactly one `public` or `private` modifier on each class and function declaration, including externs. Function access and its class container travel through the AST into semantic signatures; call resolution rejects private methods outside their declaring class before producing HIR. File-scope private declarations remain visible within the single source file. `Print` and `PrintLine` are unqualified built-in calls lowered to the existing typed print expression. [ADR 0004](decisions/0004-explicit-access-print.md) records these syntax changes.
+
 The current checker reports the first error. Multi-error recovery, incremental source databases, rich error codes, and modules belong in later iterations.
 
 ## LLVM backend

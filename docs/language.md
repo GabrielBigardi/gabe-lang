@@ -7,28 +7,30 @@ This describes implemented behavior. `.gb` files are UTF-8. C# is the syntax sta
 Compile one source file at a time. Functions can appear at file scope or as static methods inside class containers:
 
 ```csharp
-using System;
-
-class Program
+public class Program
 {
-    static int Add(int left, int right)
+    private static int Add(int left, int right)
     {
         return left + right;
     }
 
     public static int Main()
     {
-        Console.WriteLine(Add(20, 22));
+        PrintLine(Add(20, 22));
         return 0;
     }
 }
 ```
 
-Exactly one defined `Main` function must exist. It takes no parameters and returns `int` (process exit code) or `void` (exit code zero). `Main` must be safe. Even analysis and object generation currently require an entry point; library-only compilation is planned.
+Exactly one defined `Main` function must exist. It takes no parameters and returns `int` (process exit code) or `void` (exit code zero). `Main` must be safe and can be `public` or `private`. Even analysis and object generation currently require an entry point; library-only compilation is planned.
 
-Classes group static methods only. Methods require `static`, including inside a `static class`. `public`, `private`, and `internal` modifiers are accepted but accessibility is not enforced. There are no fields, object instances, constructors, nested classes, namespaces, or method overloads. `using System;` is accepted; other imports are not implemented. `Console` and `System.Console` output names are reserved.
+Classes group static methods only. Methods require `static`, including inside a `static class`. There are no fields, object instances, constructors, nested classes, namespaces, or method overloads. `Print` and `PrintLine` are available without an import. The optional `using System;` declaration remains accepted; other imports are not implemented.
 
-Unqualified calls inside a class look for a method in that class, then a file-scope function. Qualified calls such as `Program.Add(1, 2)` work. Forward calls and recursion are supported. Identifiers use ASCII letters, digits, and underscores and cannot begin with a digit or be a keyword.
+Every class, file-scope function, static method, and extern declaration requires **exactly one `public` or `private` modifier**. Missing access modifiers, repeated or conflicting access modifiers, and `internal` are errors. Modifiers can appear in any order. Locals and parameters have no access modifier.
+
+A private method can only be called from its declaring class, using either its short name or a qualified name. Public methods can be called from other classes and file-scope functions. These checks also apply to deferred calls. With the current single-file compiler, private file-scope functions, externs, and classes are visible throughout that source file, including inside classes. Access modifiers control source visibility; library exports are not implemented yet.
+
+Unqualified calls inside a class look for a method in that class, then a file-scope function, except for the built-in `Print` and `PrintLine` names. Qualified calls such as `Program.Add(1, 2)` work subject to access checks. Forward calls and recursion are supported. Identifiers use ASCII letters, digits, and underscores and cannot begin with a digit or be a keyword.
 
 ## Types and values
 
@@ -92,7 +94,7 @@ for (int i = 0; i < 10; i++)
 {
     if (i == 2) continue;
     if (i == 5) break;
-    Console.WriteLine(i);
+    PrintLine(i);
 }
 
 int remaining = 3;
@@ -113,10 +115,10 @@ defer DoSomething();
 
 {
     int value = 1;
-    defer Console.WriteLine(value);
-    defer Console.WriteLine("second cleanup");
+    defer PrintLine(value);
+    defer PrintLine("second cleanup");
     value = 2;
-    Console.WriteLine("body");
+    PrintLine("body");
 }
 // Prints body, then second cleanup, then 1.
 // DoSomething runs when the surrounding scope exits.
@@ -134,18 +136,30 @@ Ordinary type and unsafe checks still apply at the `defer` statement. Saving a p
 
 See [examples/defer.gb](../examples/defer.gb) for a runnable program and [ADR 0003](decisions/0003-scope-defer.md) for the lowering design.
 
-## Console output
+## Printing
 
-`Console.Write(value)` and `Console.WriteLine(value)` accept one `int`, `long`, `double`, `bool`, or `string`. `Console.WriteLine()` writes just a newline. `System.Console` is also supported. Output calls return `void`.
+```csharp
+Print("Hello");
+Print(", Gabe");
+PrintLine("!");
+// Prints Hello, Gabe! followed by a newline.
+
+Print("First line\nSecond line");
+PrintLine();
+```
+
+`Print(value)` writes one `int`, `long`, `double`, `bool`, or `string` without appending a newline. Newline characters in a string are printed normally. `PrintLine(value)` writes a value and appends a newline; `PrintLine()` writes just a newline. Both calls return `void`, and both can be deferred.
+
+Unqualified `Print` and `PrintLine` calls always select the built-ins; those function names are reserved at file scope. Qualified methods such as `Output.Print(...)` remain ordinary calls subject to access checks. The former `Console.Write`, `Console.WriteLine`, and `System.Console` built-ins have been removed. See [examples/printing.gb](../examples/printing.gb).
 
 Integers print in decimal, booleans as `True` / `False`, and doubles using the C runtime's `%.17g` format. Output uses the platform C runtime and its locale. Unicode string literals are emitted as UTF-8; terminal rendering depends on the terminal. Percent signs in strings are printed literally. Output redirection works through ordinary process standard output.
 
 ## Unsafe pointers and C interop
 
 ```csharp
-extern int abs(int value);
+private extern int abs(int value);
 
-int Main()
+public int Main()
 {
     int value = -21;
     unsafe
@@ -153,7 +167,7 @@ int Main()
         int* pointer = &value;
         *pointer = abs(*pointer) * 2;
     }
-    Console.WriteLine(value);
+    PrintLine(value);
     return 0;
 }
 ```

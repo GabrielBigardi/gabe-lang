@@ -7,6 +7,8 @@ import (
 
 type signature struct {
 	id         int
+	container  string
+	access     accessLevel
 	returnType valueType
 	parameters []valueType
 	unsafe     bool
@@ -23,8 +25,8 @@ func analyze(parsed *astProgram) (*Program, error) {
 	signatures := make(map[string]signature)
 	entry := -1
 	for id, fn := range parsed.functions {
-		if strings.HasPrefix(fn.name, "Console.") || strings.HasPrefix(fn.name, "System.Console.") {
-			return nil, diagnostic(fn.span, "Console is reserved for built-in output")
+		if fn.name == "Print" || fn.name == "PrintLine" {
+			return nil, diagnostic(fn.span, "'"+fn.name+"' is reserved for built-in output")
 		}
 		if fn.body == nil && fn.container != "" {
 			return nil, diagnostic(fn.span, "declare extern C functions at file scope")
@@ -52,7 +54,10 @@ func analyze(parsed *astProgram) (*Program, error) {
 		if _, exists := signatures[fn.name]; exists {
 			return nil, diagnostic(fn.span, fmt.Sprintf("duplicate function '%s'; overloading is not supported", fn.name))
 		}
-		signatures[fn.name] = signature{id, fn.returnType, parameters, fn.unsafe || fn.body == nil}
+		signatures[fn.name] = signature{
+			id: id, container: fn.container, access: fn.access,
+			returnType: fn.returnType, parameters: parameters, unsafe: fn.unsafe || fn.body == nil,
+		}
 		parts := strings.Split(fn.name, ".")
 		if parts[len(parts)-1] == "Main" && fn.body != nil {
 			if entry >= 0 {
@@ -65,7 +70,7 @@ func analyze(parsed *astProgram) (*Program, error) {
 		}
 	}
 	if entry < 0 {
-		return nil, diagnostic(Span{}, "missing entry point: declare int Main() or static int Main() inside a class")
+		return nil, diagnostic(Span{}, "missing entry point: declare public int Main() or public static int Main() inside a class")
 	}
 	program := &Program{entry: entry}
 	for id, fn := range parsed.functions {
@@ -370,10 +375,10 @@ func (c *checker) expression(e *astExpr) (*expr, error) {
 		result.kind, result.target, result.ty = exprLoad, target, target.ty
 	case exprCall:
 		switch e.name {
-		case "Console.WriteLine", "System.Console.WriteLine", "Console.Write", "System.Console.Write":
-			newline := strings.HasSuffix(e.name, "WriteLine")
+		case "Print", "PrintLine":
+			newline := e.name == "PrintLine"
 			if len(e.arguments) > 1 || (len(e.arguments) == 0 && !newline) {
-				return nil, diagnostic(e.span, "Console.Write takes one value; Console.WriteLine takes zero or one")
+				return nil, diagnostic(e.span, "Print takes one value; PrintLine takes zero or one")
 			}
 			value := &expr{kind: exprLiteral, ty: stringType, literal: literal{ty: stringType}}
 			if len(e.arguments) > 0 {
@@ -384,7 +389,7 @@ func (c *checker) expression(e *astExpr) (*expr, error) {
 				}
 			}
 			if !value.ty.numeric() && value.ty != boolType && value.ty != stringType {
-				return nil, diagnostic(e.span, "Console output supports int, long, double, bool, and string")
+				return nil, diagnostic(e.span, "Print and PrintLine support int, long, double, bool, and string")
 			}
 			result.kind, result.ty, result.value, result.newline = exprPrint, voidType, value, newline
 		default:
@@ -398,6 +403,9 @@ func (c *checker) expression(e *astExpr) (*expr, error) {
 			}
 			if !found {
 				return nil, diagnostic(e.span, "unknown function '"+e.name+"'")
+			}
+			if sig.access == accessPrivate && sig.container != "" && sig.container != c.function.container {
+				return nil, diagnostic(e.span, fmt.Sprintf("'%s' is private to class '%s'", e.name, sig.container))
 			}
 			if sig.unsafe {
 				if err := c.requireUnsafe(e.span); err != nil {

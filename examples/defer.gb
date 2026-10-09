@@ -1,10 +1,8 @@
-using System;
-
-class Program
+public class Program
 {
-    static void DoSomething()
+    private static void DoSomething()
     {
-        Console.WriteLine("function cleanup");
+        PrintLine("function cleanup");
     }
 
     public static int Main()
@@ -13,13 +11,13 @@ class Program
 
         {
             int value = 1;
-            defer Console.WriteLine(value);
-            defer Console.WriteLine("second cleanup");
+            defer PrintLine(value);
+            defer PrintLine("second cleanup");
             value = 2;
-            Console.WriteLine("inside block");
+            PrintLine("inside block");
         }
 
-        Console.WriteLine("after block");
+        PrintLine("after block");
         return 0;
     }
 }

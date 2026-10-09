@@ -1,6 +1,6 @@
-static class Program
+public static class Program
 {
-    static long Fibonacci(int count)
+    private static long Fibonacci(int count)
     {
         long previous = 0;
         long current = 1;
@@ -15,9 +15,9 @@ static class Program
         return previous;
     }
 
-    static int Main()
+    public static int Main()
     {
-        Console.WriteLine(Fibonacci(40));
+        PrintLine(Fibonacci(40));
         return 0;
     }
 }

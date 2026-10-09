@@ -1,6 +1,6 @@
-class Program
+public class Program
 {
-    static int Main()
+    public static int Main()
     {
         int value = 21;
         unsafe
@@ -8,7 +8,7 @@ class Program
             int* pointer = &value;
             *pointer *= 2;
         }
-        Console.WriteLine(value);
+        PrintLine(value);
         return 0;
     }
 }
